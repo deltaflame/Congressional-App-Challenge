@@ -2,12 +2,17 @@ pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
 function _init()
-	x=0
-	y=0
+	evpos={{1,9},{3,9},{5,9},{11,9},{13,9},{1,6},{3,6},{5,6},{11,6},{13,6},{1,12},{3,12},{5,12},{11,12},{13,12}}
+	x=6
+	y=6
+	day_time = 1
+	remaining_ev = 0
+	solved_ev = 0
+	day = 1
 	pause = false
-	day_over = 
-	mset(7, 6, 23)
-	day_start = -1
+	day_over = false
+	summary_screen = false
+	day_start = time()
 end
 function _update()
 		player_pos = {flr(x+7), flr(y+8)} // global var of player
@@ -37,36 +42,45 @@ function _update()
 end
 function _draw()
 	cls()
-	palt(0, false)
-	palt(3, true)
-	map(x,y, 0,0, 16,16,0)
-	if  (not pause) then
-		spr(2, 56,56 , 2, 2)
-	else
-	 spr(108, 56, 56, 2, 2)
-	end
-	print(player_pos[2])
-	if day_over then
-		if player_pos[2] == 1 then
-			c = 7
+	if not summary_screen then
+		palt(0, false)
+		palt(3, true)
+		map(x,y, 0,0, 16,16,0)
+		if  (not pause) then
+			if (flr(x)==6 and flr(y)==6) then
+				spr(110, 56, 56, 2, 2)
+			else
+				spr(2, 56,56 , 2, 2)
+			end
 		else
-			c = 0
+		 spr(108, 56, 56, 2, 2)
 		end
-		print("day over!", 50, 50, c)
+		if day_over then
+			if player_pos[2] == 1 then
+				c = 7
+			else
+				c = 0
+			end
+			print("day over!", 50, 50, c)
+			if (time() - day_start >= day_time + 5) then
+				summary_screen = true
+			end
+		end
+		_gameloop()
+	else
+		print("day: " .. day, 20, 16, 7)
+		print("solved events: " .. solved_ev, 20, 32, 7)
+		print("unsolved events: " .. remaining_ev, 20, 48, 7)
+		if btn(4) then
+				next_day()
+		end
 	end
-	_gameloop()
 end
-evpos={{1,9},{3,9},{5,9},{11,9},{13,9},{1,6},{3,6},{5,6},{11,6},{13,6},{1,12},{3,12},{5,12},{11,12},{13,12}}
 function _gameloop()
-day = 1
-morale = 3
-day_over=false
 if not day_over then
-	_startday(day, morale)
+	_startday()
 end
-if (day_start == -1) then
-	day_start = time()
-elseif (time()-day_start >= 1) then
+if (time()-day_start >= day_time) then
 	day_over = true
 end
 end
@@ -75,10 +89,11 @@ function _createevent()
 
 end
 
-function _startday(day, diff)
+function _startday()
 if (time() >= 5 and time() % 3 == 0) then
-	if (flr(rnd(10)) >= 9) then
+	if (flr(rnd(100)) >= 40) then
 		pos=rnd(evpos)
+		remaining_ev += 1
 		mset(pos[1], pos[2], 23 + rnd(2))
 	end
 end
@@ -88,21 +103,28 @@ end
 function _solveevent()
 	get_event = mget(player_pos[1], player_pos[2]) // gets the sprite at the player's pos
 	get_flag = fget(get_event) // gets the flag of the sprite
-	timers = {5, 10, 15} // different times for each event
+	timers = {3, 6, 9} // different times for each event
 	timer = timers[get_event-22] // offset the sprites to get the timer for the event
 	if (get_flag==4) then //checks if event pos is equal to player pos
 		if (btn(4) and not pause) then
 			pause = true
+			remaining_ev -= 1
+			solved_ev += 1
 			mset(player_pos[1], player_pos[2], 4)
 			time_paused = time()
-		// implements a global timer here
-		// do the pause and check curr time
-		// in the update func loop
-		// wait timer (solving event)
-		// clear event
-		
 		end	
 	end
+end
+
+function next_day()
+	evpos={{1,9},{3,9},{5,9},{11,9},{13,9},{1,6},{3,6},{5,6},{11,6},{13,6},{1,12},{3,12},{5,12},{11,12},{13,12}}
+	x=6
+	y=6
+	day += 1
+	pause = false
+	day_over = false
+	summary_screen = false
+	day_start = time()
 end
 __gfx__
 33355555555553333333555555553333666677775566665555555555555555555555555555666655556666556666777746666664666677776666771111667777
@@ -187,7 +209,7 @@ __gfx__
 77775556755566667777555675556666777765567557666677775556755566667777555675556666000000000000000000000000000000000000000000000000
 __gff__
 0000000001020202020202020302010100000000000202040404060100010200000000000000040400040502020102000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000
-0101010101010101010100000000000001010101010101010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0202020202020202020200000000000002020202020202020202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 072c0606060606060606060606061a083f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 053c0404040404040404040404042b053f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
