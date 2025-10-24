@@ -5,7 +5,7 @@ function _init()
 	evpos={{1,9},{3,9},{5,9},{11,9},{13,9},{1,6},{3,6},{5,6},{11,6},{13,6},{1,12},{3,12},{5,12},{11,12},{13,12}}
 	x=6
 	y=6
-	day_time = 1
+	day_time = 60
 	remaining_ev = 0
 	solved_ev = 0
 	day = 1
@@ -13,6 +13,7 @@ function _init()
 	day_over = false
 	summary_screen = false
 	day_start = time()
+	game_over = false
 end
 function _update()
 		player_pos = {flr(x+7), flr(y+8)} // global var of player
@@ -42,7 +43,17 @@ function _update()
 end
 function _draw()
 	cls()
-	if not summary_screen then
+	if game_over then
+		if solved_ev < remaining_ev then
+			print("you were overwhelmed", 24, 43, 7)
+			print("with tasks so you took", 20, 59, 7)
+			print("a break from teaching", 22, 75, 7)
+		else
+			print("congrats you went through", 16, 43, 7)
+			print("a week of classes managing", 14, 59, 7)
+			print("your tasks successfully", 18, 75, 7)
+		end
+	elseif not summary_screen then
 		palt(0, false)
 		palt(3, true)
 		map(x,y, 0,0, 16,16,0)
@@ -56,24 +67,30 @@ function _draw()
 		 spr(108, 56, 56, 2, 2)
 		end
 		if day_over then
-			if player_pos[2] == 1 then
-				c = 7
-			else
-				c = 0
-			end
-			print("day over!", 50, 50, c)
+			print("day over!", 48, 50, 0)
+			print("day over!", 47, 51, 0)
+			print("day over!", 46, 50, 0)
+			print("day over!", 47, 49, 0)
+			print("day over!", 47, 50, 7)
 			if (time() - day_start >= day_time + 5) then
 				summary_screen = true
 			end
 		end
 		_gameloop()
 	else
-		print("day: " .. day, 20, 16, 7)
-		print("solved events: " .. solved_ev, 20, 32, 7)
-		print("unsolved events: " .. remaining_ev, 20, 48, 7)
+		print("day: " .. day, 20, 32, 7)
+		print("solved events: " .. solved_ev, 20, 48, 7)
+		print("unsolved events: " .. remaining_ev, 20, 64, 7)
 		if btn(4) then
 				next_day()
 		end
+		end
+	if day < 6 then
+			print("day ".. day, 1, 2, 0)
+			print("day ".. day, 2, 1, 0)
+			print("day ".. day, 3, 2, 0)
+			print("day ".. day, 2, 3, 0)
+			print("day ".. day, 2, 2, 7)
 	end
 end
 function _gameloop()
@@ -125,6 +142,9 @@ function next_day()
 	day_over = false
 	summary_screen = false
 	day_start = time()
+	if day > 5 then
+		game_over = true
+	end
 end
 __gfx__
 33355555555553333333555555553333666677775566665555555555555555555555555555666655556666556666777746666664666677776666771111667777
